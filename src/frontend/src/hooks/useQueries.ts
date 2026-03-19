@@ -1,191 +1,175 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type {
-  Category,
-  ContactFormSubmission,
-  PortfolioItem,
-  Service,
-  SiteSettings,
-} from "../backend";
+import type { BookingStatus } from "../backend.d";
 import { useActor } from "./useActor";
-export type {
-  Category,
-  PortfolioItem,
-  Service,
-  SiteSettings,
-  ContactFormSubmission,
-};
 
-export function usePortfolioItems() {
+export function useGetAllEvents() {
   const { actor, isFetching } = useActor();
-  return useQuery<PortfolioItem[]>({
-    queryKey: ["portfolio"],
+  return useQuery({
+    queryKey: ["events"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getPortfolioItems();
+      return actor.getAllEvents();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useServices() {
+export function useGetEvent(id: bigint | null) {
   const { actor, isFetching } = useActor();
-  return useQuery<Service[]>({
-    queryKey: ["services"],
+  return useQuery({
+    queryKey: ["event", id?.toString()],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getServices();
+      if (!actor || id === null) return null;
+      return actor.getEvent(id);
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && id !== null,
   });
 }
 
-export function useSiteSettings() {
-  const { actor, isFetching } = useActor();
-  return useQuery<SiteSettings | null>({
-    queryKey: ["siteSettings"],
-    queryFn: async () => {
-      if (!actor) return null;
-      return actor.getSiteSettings();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useContactSubmissions() {
-  const { actor, isFetching } = useActor();
-  return useQuery<ContactFormSubmission[]>({
-    queryKey: ["contactSubmissions"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getContactFormSubmissions();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useSubmitContact() {
+export function useCreateBooking() {
   const { actor } = useActor();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async ({
+      name,
+      email,
+      phone,
+      eventId,
+    }: {
       name: string;
       email: string;
       phone: string;
-      subject: string;
-      message: string;
+      eventId: bigint;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.submitContactForm(
-        data.name,
-        data.email,
-        data.phone,
-        data.subject,
-        data.message,
-      );
+      if (!actor) throw new Error("Actor not available");
+      return actor.createBooking(name, email, phone, eventId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
     },
   });
 }
 
-export function useCreatePortfolioItem() {
+export function useGetAllBookings() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["bookings"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllBookings();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
       title: string;
+      date: bigint;
       description: string;
-      category: Category;
+      location: string;
+      capacity: bigint;
+      price: bigint;
       imageUrl: string;
-      projectUrl: string;
-      clientName: string;
-      completionYear: bigint;
+      category: string;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.createPortfolioItem(
+      if (!actor) throw new Error("Actor not available");
+      return actor.createEvent(
         data.title,
+        data.date,
         data.description,
-        data.category,
+        data.location,
+        data.capacity,
+        data.price,
         data.imageUrl,
-        data.projectUrl,
-        data.clientName,
-        data.completionYear,
+        data.category,
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["portfolio"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
-export function useUpdatePortfolioItem() {
+export function useUpdateEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
       id: bigint;
       title: string;
+      date: bigint;
       description: string;
-      category: Category;
+      location: string;
+      capacity: bigint;
+      price: bigint;
       imageUrl: string;
-      projectUrl: string;
-      clientName: string;
-      completionYear: bigint;
+      category: string;
     }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.updatePortfolioItem(
+      if (!actor) throw new Error("Actor not available");
+      return actor.updateEvent(
         data.id,
         data.title,
+        data.date,
         data.description,
-        data.category,
+        data.location,
+        data.capacity,
+        data.price,
         data.imageUrl,
-        data.projectUrl,
-        data.clientName,
-        data.completionYear,
+        data.category,
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["portfolio"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
-export function useDeletePortfolioItem() {
+export function useDeleteEvent() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: bigint) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.deletePortfolioItem(id);
+      if (!actor) throw new Error("Actor not available");
+      return actor.deleteEvent(id);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["portfolio"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
-export function useIsAdmin() {
+export function useUpdateBookingStatus() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      bookingId,
+      newStatus,
+    }: {
+      bookingId: bigint;
+      newStatus: BookingStatus;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.updateBookingStatus(bookingId, newStatus);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useIsCallerAdmin() {
   const { actor, isFetching } = useActor();
-  return useQuery<boolean>({
+  return useQuery({
     queryKey: ["isAdmin"],
     queryFn: async () => {
       if (!actor) return false;
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-export function useUpdateSiteSettings() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (s: SiteSettings) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.updateSiteSettings(
-        s.companyName,
-        s.tagline,
-        s.phone,
-        s.email,
-        s.address,
-        s.whatsappNumber,
-        s.facebookUrl,
-        s.instagramUrl,
-        s.linkedinUrl,
-        s.twitterUrl,
-      );
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["siteSettings"] }),
   });
 }

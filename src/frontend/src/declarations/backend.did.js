@@ -24,51 +24,36 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
-export const Category = IDL.Variant({
-  'seo' : IDL.Null,
-  'web_design' : IDL.Null,
-  'web_development' : IDL.Null,
-  'ecommerce' : IDL.Null,
-});
 export const Time = IDL.Int;
-export const ContactFormSubmission = IDL.Record({
+export const BookingStatus = IDL.Variant({
+  'cancelled' : IDL.Null,
+  'pending' : IDL.Null,
+  'confirmed' : IDL.Null,
+});
+export const Booking = IDL.Record({
   'id' : IDL.Nat,
-  'subject' : IDL.Text,
+  'status' : BookingStatus,
+  'eventId' : IDL.Nat,
   'name' : IDL.Text,
   'email' : IDL.Text,
-  'message' : IDL.Text,
   'timestamp' : Time,
   'phone' : IDL.Text,
 });
-export const PortfolioItem = IDL.Record({
+export const Event = IDL.Record({
   'id' : IDL.Nat,
   'title' : IDL.Text,
-  'completionYear' : IDL.Nat,
-  'clientName' : IDL.Text,
+  'date' : Time,
   'description' : IDL.Text,
   'imageUrl' : IDL.Text,
-  'category' : Category,
-  'projectUrl' : IDL.Text,
+  'category' : IDL.Text,
+  'capacity' : IDL.Nat,
+  'price' : IDL.Nat,
+  'location' : IDL.Text,
 });
-export const Service = IDL.Record({
-  'id' : IDL.Nat,
-  'title' : IDL.Text,
-  'features' : IDL.Vec(IDL.Text),
-  'displayOrder' : IDL.Nat,
-  'description' : IDL.Text,
-  'iconName' : IDL.Text,
-});
-export const SiteSettings = IDL.Record({
-  'tagline' : IDL.Text,
-  'twitterUrl' : IDL.Text,
-  'instagramUrl' : IDL.Text,
+export const UserProfile = IDL.Record({
+  'name' : IDL.Text,
   'email' : IDL.Text,
-  'whatsappNumber' : IDL.Text,
-  'address' : IDL.Text,
-  'companyName' : IDL.Text,
   'phone' : IDL.Text,
-  'facebookUrl' : IDL.Text,
-  'linkedinUrl' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
@@ -100,62 +85,50 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createPortfolioItem' : IDL.Func(
-      [IDL.Text, IDL.Text, Category, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
-      [],
-      [],
-    ),
-  'createService' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Text, IDL.Nat],
-      [],
+  'createBooking' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+      [IDL.Nat],
       [],
     ),
-  'deletePortfolioItem' : IDL.Func([IDL.Nat], [], []),
-  'deleteService' : IDL.Func([IDL.Nat], [], []),
-  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getContactFormSubmissions' : IDL.Func(
-      [],
-      [IDL.Vec(ContactFormSubmission)],
-      ['query'],
-    ),
-  'getPortfolioItems' : IDL.Func([], [IDL.Vec(PortfolioItem)], ['query']),
-  'getServices' : IDL.Func([], [IDL.Vec(Service)], ['query']),
-  'getSiteSettings' : IDL.Func([], [IDL.Opt(SiteSettings)], ['query']),
-  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'submitContactForm' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-      [],
-      [],
-    ),
-  'updatePortfolioItem' : IDL.Func(
+  'createEvent' : IDL.Func(
       [
-        IDL.Nat,
         IDL.Text,
-        IDL.Text,
-        Category,
-        IDL.Text,
+        Time,
         IDL.Text,
         IDL.Text,
         IDL.Nat,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
       ],
       [],
       [],
     ),
-  'updateService' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Text, IDL.Nat],
-      [],
-      [],
+  'deleteBooking' : IDL.Func([IDL.Nat], [], []),
+  'deleteEvent' : IDL.Func([IDL.Nat], [], []),
+  'getAllBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+  'getAllEvents' : IDL.Func([], [IDL.Vec(Event)], ['query']),
+  'getBookingsByEvent' : IDL.Func([IDL.Nat], [IDL.Vec(Booking)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getEvent' : IDL.Func([IDL.Nat], [IDL.Opt(Event)], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
     ),
-  'updateSiteSettings' : IDL.Func(
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [], []),
+  'updateEvent' : IDL.Func(
       [
+        IDL.Nat,
+        IDL.Text,
+        Time,
         IDL.Text,
         IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
+        IDL.Nat,
+        IDL.Nat,
         IDL.Text,
         IDL.Text,
       ],
@@ -183,51 +156,36 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
-  const Category = IDL.Variant({
-    'seo' : IDL.Null,
-    'web_design' : IDL.Null,
-    'web_development' : IDL.Null,
-    'ecommerce' : IDL.Null,
-  });
   const Time = IDL.Int;
-  const ContactFormSubmission = IDL.Record({
+  const BookingStatus = IDL.Variant({
+    'cancelled' : IDL.Null,
+    'pending' : IDL.Null,
+    'confirmed' : IDL.Null,
+  });
+  const Booking = IDL.Record({
     'id' : IDL.Nat,
-    'subject' : IDL.Text,
+    'status' : BookingStatus,
+    'eventId' : IDL.Nat,
     'name' : IDL.Text,
     'email' : IDL.Text,
-    'message' : IDL.Text,
     'timestamp' : Time,
     'phone' : IDL.Text,
   });
-  const PortfolioItem = IDL.Record({
+  const Event = IDL.Record({
     'id' : IDL.Nat,
     'title' : IDL.Text,
-    'completionYear' : IDL.Nat,
-    'clientName' : IDL.Text,
+    'date' : Time,
     'description' : IDL.Text,
     'imageUrl' : IDL.Text,
-    'category' : Category,
-    'projectUrl' : IDL.Text,
+    'category' : IDL.Text,
+    'capacity' : IDL.Nat,
+    'price' : IDL.Nat,
+    'location' : IDL.Text,
   });
-  const Service = IDL.Record({
-    'id' : IDL.Nat,
-    'title' : IDL.Text,
-    'features' : IDL.Vec(IDL.Text),
-    'displayOrder' : IDL.Nat,
-    'description' : IDL.Text,
-    'iconName' : IDL.Text,
-  });
-  const SiteSettings = IDL.Record({
-    'tagline' : IDL.Text,
-    'twitterUrl' : IDL.Text,
-    'instagramUrl' : IDL.Text,
+  const UserProfile = IDL.Record({
+    'name' : IDL.Text,
     'email' : IDL.Text,
-    'whatsappNumber' : IDL.Text,
-    'address' : IDL.Text,
-    'companyName' : IDL.Text,
     'phone' : IDL.Text,
-    'facebookUrl' : IDL.Text,
-    'linkedinUrl' : IDL.Text,
   });
   
   return IDL.Service({
@@ -259,62 +217,50 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createPortfolioItem' : IDL.Func(
-        [IDL.Text, IDL.Text, Category, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
-        [],
-        [],
-      ),
-    'createService' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Text, IDL.Nat],
-        [],
+    'createBooking' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+        [IDL.Nat],
         [],
       ),
-    'deletePortfolioItem' : IDL.Func([IDL.Nat], [], []),
-    'deleteService' : IDL.Func([IDL.Nat], [], []),
-    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getContactFormSubmissions' : IDL.Func(
-        [],
-        [IDL.Vec(ContactFormSubmission)],
-        ['query'],
-      ),
-    'getPortfolioItems' : IDL.Func([], [IDL.Vec(PortfolioItem)], ['query']),
-    'getServices' : IDL.Func([], [IDL.Vec(Service)], ['query']),
-    'getSiteSettings' : IDL.Func([], [IDL.Opt(SiteSettings)], ['query']),
-    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'submitContactForm' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-        [],
-        [],
-      ),
-    'updatePortfolioItem' : IDL.Func(
+    'createEvent' : IDL.Func(
         [
-          IDL.Nat,
           IDL.Text,
-          IDL.Text,
-          Category,
-          IDL.Text,
+          Time,
           IDL.Text,
           IDL.Text,
           IDL.Nat,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
         ],
         [],
         [],
       ),
-    'updateService' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Text, IDL.Nat],
-        [],
-        [],
+    'deleteBooking' : IDL.Func([IDL.Nat], [], []),
+    'deleteEvent' : IDL.Func([IDL.Nat], [], []),
+    'getAllBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+    'getAllEvents' : IDL.Func([], [IDL.Vec(Event)], ['query']),
+    'getBookingsByEvent' : IDL.Func([IDL.Nat], [IDL.Vec(Booking)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getEvent' : IDL.Func([IDL.Nat], [IDL.Opt(Event)], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
       ),
-    'updateSiteSettings' : IDL.Func(
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [], []),
+    'updateEvent' : IDL.Func(
         [
+          IDL.Nat,
+          IDL.Text,
+          Time,
           IDL.Text,
           IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
+          IDL.Nat,
+          IDL.Nat,
           IDL.Text,
           IDL.Text,
         ],

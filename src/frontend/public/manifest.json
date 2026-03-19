@@ -1,0 +1,18 @@
+{
+  "name": "Aura Events",
+  "short_name": "AuraEvents",
+  "description": "Premium event booking platform — discover and book extraordinary events.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E242A",
+  "theme_color": "#C8A24B",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["events", "booking", "entertainment"]
+}

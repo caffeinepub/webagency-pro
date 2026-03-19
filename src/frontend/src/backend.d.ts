@@ -7,51 +7,36 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface ContactFormSubmission {
+export type Time = bigint;
+export interface Event {
     id: bigint;
-    subject: string;
+    title: string;
+    date: Time;
+    description: string;
+    imageUrl: string;
+    category: string;
+    capacity: bigint;
+    price: bigint;
+    location: string;
+}
+export interface Booking {
+    id: bigint;
+    status: BookingStatus;
+    eventId: bigint;
     name: string;
     email: string;
-    message: string;
     timestamp: Time;
     phone: string;
 }
-export interface SiteSettings {
-    tagline: string;
-    twitterUrl: string;
-    instagramUrl: string;
+export interface UserProfile {
+    name: string;
     email: string;
-    whatsappNumber: string;
-    address: string;
-    companyName: string;
     phone: string;
-    facebookUrl: string;
-    linkedinUrl: string;
 }
-export type Time = bigint;
-export interface PortfolioItem {
-    id: bigint;
-    title: string;
-    completionYear: bigint;
-    clientName: string;
-    description: string;
-    imageUrl: string;
-    category: Category;
-    projectUrl: string;
-}
-export interface Service {
-    id: bigint;
-    title: string;
-    features: Array<string>;
-    displayOrder: bigint;
-    description: string;
-    iconName: string;
-}
-export enum Category {
-    seo = "seo",
-    web_design = "web_design",
-    web_development = "web_development",
-    ecommerce = "ecommerce"
+export enum BookingStatus {
+    cancelled = "cancelled",
+    pending = "pending",
+    confirmed = "confirmed"
 }
 export enum UserRole {
     admin = "admin",
@@ -60,18 +45,19 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createPortfolioItem(title: string, description: string, category: Category, imageUrl: string, projectUrl: string, clientName: string, completionYear: bigint): Promise<void>;
-    createService(title: string, description: string, features: Array<string>, iconName: string, displayOrder: bigint): Promise<void>;
-    deletePortfolioItem(id: bigint): Promise<void>;
-    deleteService(id: bigint): Promise<void>;
+    createBooking(name: string, email: string, phone: string, eventId: bigint): Promise<bigint>;
+    createEvent(title: string, date: Time, description: string, location: string, capacity: bigint, price: bigint, imageUrl: string, category: string): Promise<void>;
+    deleteBooking(bookingId: bigint): Promise<void>;
+    deleteEvent(id: bigint): Promise<void>;
+    getAllBookings(): Promise<Array<Booking>>;
+    getAllEvents(): Promise<Array<Event>>;
+    getBookingsByEvent(eventId: bigint): Promise<Array<Booking>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getContactFormSubmissions(): Promise<Array<ContactFormSubmission>>;
-    getPortfolioItems(): Promise<Array<PortfolioItem>>;
-    getServices(): Promise<Array<Service>>;
-    getSiteSettings(): Promise<SiteSettings | null>;
+    getEvent(id: bigint): Promise<Event | null>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
-    submitContactForm(name: string, email: string, phone: string, subject: string, message: string): Promise<void>;
-    updatePortfolioItem(id: bigint, title: string, description: string, category: Category, imageUrl: string, projectUrl: string, clientName: string, completionYear: bigint): Promise<void>;
-    updateService(id: bigint, title: string, description: string, features: Array<string>, iconName: string, displayOrder: bigint): Promise<void>;
-    updateSiteSettings(companyName: string, tagline: string, phone: string, email: string, address: string, whatsappNumber: string, facebookUrl: string, instagramUrl: string, linkedinUrl: string, twitterUrl: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateBookingStatus(bookingId: bigint, newStatus: BookingStatus): Promise<void>;
+    updateEvent(id: bigint, title: string, date: Time, description: string, location: string, capacity: bigint, price: bigint, imageUrl: string, category: string): Promise<void>;
 }

@@ -10,50 +10,35 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export type Category = { 'seo' : null } |
-  { 'web_design' : null } |
-  { 'web_development' : null } |
-  { 'ecommerce' : null };
-export interface ContactFormSubmission {
+export interface Booking {
   'id' : bigint,
-  'subject' : string,
+  'status' : BookingStatus,
+  'eventId' : bigint,
   'name' : string,
   'email' : string,
-  'message' : string,
   'timestamp' : Time,
   'phone' : string,
 }
-export interface PortfolioItem {
+export type BookingStatus = { 'cancelled' : null } |
+  { 'pending' : null } |
+  { 'confirmed' : null };
+export interface Event {
   'id' : bigint,
   'title' : string,
-  'completionYear' : bigint,
-  'clientName' : string,
+  'date' : Time,
   'description' : string,
   'imageUrl' : string,
-  'category' : Category,
-  'projectUrl' : string,
-}
-export interface Service {
-  'id' : bigint,
-  'title' : string,
-  'features' : Array<string>,
-  'displayOrder' : bigint,
-  'description' : string,
-  'iconName' : string,
-}
-export interface SiteSettings {
-  'tagline' : string,
-  'twitterUrl' : string,
-  'instagramUrl' : string,
-  'email' : string,
-  'whatsappNumber' : string,
-  'address' : string,
-  'companyName' : string,
-  'phone' : string,
-  'facebookUrl' : string,
-  'linkedinUrl' : string,
+  'category' : string,
+  'capacity' : bigint,
+  'price' : bigint,
+  'location' : string,
 }
 export type Time = bigint;
+export interface UserProfile {
+  'name' : string,
+  'email' : string,
+  'phone' : string,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -86,47 +71,25 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createPortfolioItem' : ActorMethod<
-    [string, string, Category, string, string, string, bigint],
+  'createBooking' : ActorMethod<[string, string, string, bigint], bigint>,
+  'createEvent' : ActorMethod<
+    [string, Time, string, string, bigint, bigint, string, string],
     undefined
   >,
-  'createService' : ActorMethod<
-    [string, string, Array<string>, string, bigint],
-    undefined
-  >,
-  'deletePortfolioItem' : ActorMethod<[bigint], undefined>,
-  'deleteService' : ActorMethod<[bigint], undefined>,
+  'deleteBooking' : ActorMethod<[bigint], undefined>,
+  'deleteEvent' : ActorMethod<[bigint], undefined>,
+  'getAllBookings' : ActorMethod<[], Array<Booking>>,
+  'getAllEvents' : ActorMethod<[], Array<Event>>,
+  'getBookingsByEvent' : ActorMethod<[bigint], Array<Booking>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getContactFormSubmissions' : ActorMethod<[], Array<ContactFormSubmission>>,
-  'getPortfolioItems' : ActorMethod<[], Array<PortfolioItem>>,
-  'getServices' : ActorMethod<[], Array<Service>>,
-  'getSiteSettings' : ActorMethod<[], [] | [SiteSettings]>,
+  'getEvent' : ActorMethod<[bigint], [] | [Event]>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'submitContactForm' : ActorMethod<
-    [string, string, string, string, string],
-    undefined
-  >,
-  'updatePortfolioItem' : ActorMethod<
-    [bigint, string, string, Category, string, string, string, bigint],
-    undefined
-  >,
-  'updateService' : ActorMethod<
-    [bigint, string, string, Array<string>, string, bigint],
-    undefined
-  >,
-  'updateSiteSettings' : ActorMethod<
-    [
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-    ],
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], undefined>,
+  'updateEvent' : ActorMethod<
+    [bigint, string, Time, string, string, bigint, bigint, string, string],
     undefined
   >,
 }

@@ -89,62 +89,47 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface ContactFormSubmission {
-    id: bigint;
-    subject: string;
-    name: string;
-    email: string;
-    message: string;
-    timestamp: Time;
-    phone: string;
-}
-export interface SiteSettings {
-    tagline: string;
-    twitterUrl: string;
-    instagramUrl: string;
-    email: string;
-    whatsappNumber: string;
-    address: string;
-    companyName: string;
-    phone: string;
-    facebookUrl: string;
-    linkedinUrl: string;
-}
 export type Time = bigint;
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
-export interface PortfolioItem {
+export interface Event {
     id: bigint;
     title: string;
-    completionYear: bigint;
-    clientName: string;
+    date: Time;
     description: string;
     imageUrl: string;
-    category: Category;
-    projectUrl: string;
+    category: string;
+    capacity: bigint;
+    price: bigint;
+    location: string;
 }
-export interface Service {
+export interface Booking {
     id: bigint;
-    title: string;
-    features: Array<string>;
-    displayOrder: bigint;
-    description: string;
-    iconName: string;
+    status: BookingStatus;
+    eventId: bigint;
+    name: string;
+    email: string;
+    timestamp: Time;
+    phone: string;
 }
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
 }
+export interface UserProfile {
+    name: string;
+    email: string;
+    phone: string;
+}
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
     topped_up_amount?: bigint;
 }
-export enum Category {
-    seo = "seo",
-    web_design = "web_design",
-    web_development = "web_development",
-    ecommerce = "ecommerce"
+export enum BookingStatus {
+    cancelled = "cancelled",
+    pending = "pending",
+    confirmed = "confirmed"
 }
 export enum UserRole {
     admin = "admin",
@@ -160,22 +145,23 @@ export interface backendInterface {
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createPortfolioItem(title: string, description: string, category: Category, imageUrl: string, projectUrl: string, clientName: string, completionYear: bigint): Promise<void>;
-    createService(title: string, description: string, features: Array<string>, iconName: string, displayOrder: bigint): Promise<void>;
-    deletePortfolioItem(id: bigint): Promise<void>;
-    deleteService(id: bigint): Promise<void>;
+    createBooking(name: string, email: string, phone: string, eventId: bigint): Promise<bigint>;
+    createEvent(title: string, date: Time, description: string, location: string, capacity: bigint, price: bigint, imageUrl: string, category: string): Promise<void>;
+    deleteBooking(bookingId: bigint): Promise<void>;
+    deleteEvent(id: bigint): Promise<void>;
+    getAllBookings(): Promise<Array<Booking>>;
+    getAllEvents(): Promise<Array<Event>>;
+    getBookingsByEvent(eventId: bigint): Promise<Array<Booking>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getContactFormSubmissions(): Promise<Array<ContactFormSubmission>>;
-    getPortfolioItems(): Promise<Array<PortfolioItem>>;
-    getServices(): Promise<Array<Service>>;
-    getSiteSettings(): Promise<SiteSettings | null>;
+    getEvent(id: bigint): Promise<Event | null>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
-    submitContactForm(name: string, email: string, phone: string, subject: string, message: string): Promise<void>;
-    updatePortfolioItem(id: bigint, title: string, description: string, category: Category, imageUrl: string, projectUrl: string, clientName: string, completionYear: bigint): Promise<void>;
-    updateService(id: bigint, title: string, description: string, features: Array<string>, iconName: string, displayOrder: bigint): Promise<void>;
-    updateSiteSettings(companyName: string, tagline: string, phone: string, email: string, address: string, whatsappNumber: string, facebookUrl: string, instagramUrl: string, linkedinUrl: string, twitterUrl: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateBookingStatus(bookingId: bigint, newStatus: BookingStatus): Promise<void>;
+    updateEvent(id: bigint, title: string, date: Time, description: string, location: string, capacity: bigint, price: bigint, imageUrl: string, category: string): Promise<void>;
 }
-import type { Category as _Category, PortfolioItem as _PortfolioItem, SiteSettings as _SiteSettings, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { Booking as _Booking, BookingStatus as _BookingStatus, Event as _Event, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -290,130 +276,158 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createPortfolioItem(arg0: string, arg1: string, arg2: Category, arg3: string, arg4: string, arg5: string, arg6: bigint): Promise<void> {
+    async createBooking(arg0: string, arg1: string, arg2: string, arg3: bigint): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.createPortfolioItem(arg0, arg1, to_candid_Category_n10(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5, arg6);
+                const result = await this.actor.createBooking(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createPortfolioItem(arg0, arg1, to_candid_Category_n10(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5, arg6);
+            const result = await this.actor.createBooking(arg0, arg1, arg2, arg3);
             return result;
         }
     }
-    async createService(arg0: string, arg1: string, arg2: Array<string>, arg3: string, arg4: bigint): Promise<void> {
+    async createEvent(arg0: string, arg1: Time, arg2: string, arg3: string, arg4: bigint, arg5: bigint, arg6: string, arg7: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createService(arg0, arg1, arg2, arg3, arg4);
+                const result = await this.actor.createEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createService(arg0, arg1, arg2, arg3, arg4);
+            const result = await this.actor.createEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
             return result;
         }
     }
-    async deletePortfolioItem(arg0: bigint): Promise<void> {
+    async deleteBooking(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.deletePortfolioItem(arg0);
+                const result = await this.actor.deleteBooking(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.deletePortfolioItem(arg0);
+            const result = await this.actor.deleteBooking(arg0);
             return result;
         }
     }
-    async deleteService(arg0: bigint): Promise<void> {
+    async deleteEvent(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.deleteService(arg0);
+                const result = await this.actor.deleteEvent(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.deleteService(arg0);
+            const result = await this.actor.deleteEvent(arg0);
             return result;
+        }
+    }
+    async getAllBookings(): Promise<Array<Booking>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllBookings();
+                return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllBookings();
+            return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllEvents(): Promise<Array<Event>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllEvents();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllEvents();
+            return result;
+        }
+    }
+    async getBookingsByEvent(arg0: bigint): Promise<Array<Booking>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getBookingsByEvent(arg0);
+                return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getBookingsByEvent(arg0);
+            return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCallerUserProfile(): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserProfile();
+                return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserProfile();
+            return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n12(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n12(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getContactFormSubmissions(): Promise<Array<ContactFormSubmission>> {
+    async getEvent(arg0: bigint): Promise<Event | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getContactFormSubmissions();
-                return result;
+                const result = await this.actor.getEvent(arg0);
+                return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getContactFormSubmissions();
-            return result;
+            const result = await this.actor.getEvent(arg0);
+            return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getPortfolioItems(): Promise<Array<PortfolioItem>> {
+    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getPortfolioItems();
-                return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getUserProfile(arg0);
+                return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPortfolioItems();
-            return from_candid_vec_n14(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getServices(): Promise<Array<Service>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getServices();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getServices();
-            return result;
-        }
-    }
-    async getSiteSettings(): Promise<SiteSettings | null> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getSiteSettings();
-                return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getSiteSettings();
-            return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getUserProfile(arg0);
+            return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -430,76 +444,65 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async submitContactForm(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<void> {
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.submitContactForm(arg0, arg1, arg2, arg3, arg4);
+                const result = await this.actor.saveCallerUserProfile(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.submitContactForm(arg0, arg1, arg2, arg3, arg4);
+            const result = await this.actor.saveCallerUserProfile(arg0);
             return result;
         }
     }
-    async updatePortfolioItem(arg0: bigint, arg1: string, arg2: string, arg3: Category, arg4: string, arg5: string, arg6: string, arg7: bigint): Promise<void> {
+    async updateBookingStatus(arg0: bigint, arg1: BookingStatus): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updatePortfolioItem(arg0, arg1, arg2, to_candid_Category_n10(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6, arg7);
+                const result = await this.actor.updateBookingStatus(arg0, to_candid_BookingStatus_n19(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updatePortfolioItem(arg0, arg1, arg2, to_candid_Category_n10(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6, arg7);
+            const result = await this.actor.updateBookingStatus(arg0, to_candid_BookingStatus_n19(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
-    async updateService(arg0: bigint, arg1: string, arg2: string, arg3: Array<string>, arg4: string, arg5: bigint): Promise<void> {
+    async updateEvent(arg0: bigint, arg1: string, arg2: Time, arg3: string, arg4: string, arg5: bigint, arg6: bigint, arg7: string, arg8: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateService(arg0, arg1, arg2, arg3, arg4, arg5);
+                const result = await this.actor.updateEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateService(arg0, arg1, arg2, arg3, arg4, arg5);
-            return result;
-        }
-    }
-    async updateSiteSettings(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: string, arg8: string, arg9: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.updateSiteSettings(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.updateSiteSettings(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+            const result = await this.actor.updateEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
             return result;
         }
     }
 }
-function from_candid_Category_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Category): Category {
-    return from_candid_variant_n18(_uploadFile, _downloadFile, value);
+function from_candid_BookingStatus_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BookingStatus): BookingStatus {
+    return from_candid_variant_n14(_uploadFile, _downloadFile, value);
 }
-function from_candid_PortfolioItem_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PortfolioItem): PortfolioItem {
-    return from_candid_record_n16(_uploadFile, _downloadFile, value);
+function from_candid_Booking_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Booking): Booking {
+    return from_candid_record_n12(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n13(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n17(_uploadFile, _downloadFile, value);
 }
 function from_candid__CaffeineStorageRefillResult_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: __CaffeineStorageRefillResult): _CaffeineStorageRefillResult {
     return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_SiteSettings]): SiteSettings | null {
+function from_candid_opt_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Event]): Event | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
@@ -508,34 +511,31 @@ function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
-    title: string;
-    completionYear: bigint;
-    clientName: string;
-    description: string;
-    imageUrl: string;
-    category: _Category;
-    projectUrl: string;
+    status: _BookingStatus;
+    eventId: bigint;
+    name: string;
+    email: string;
+    timestamp: _Time;
+    phone: string;
 }): {
     id: bigint;
-    title: string;
-    completionYear: bigint;
-    clientName: string;
-    description: string;
-    imageUrl: string;
-    category: Category;
-    projectUrl: string;
+    status: BookingStatus;
+    eventId: bigint;
+    name: string;
+    email: string;
+    timestamp: Time;
+    phone: string;
 } {
     return {
         id: value.id,
-        title: value.title,
-        completionYear: value.completionYear,
-        clientName: value.clientName,
-        description: value.description,
-        imageUrl: value.imageUrl,
-        category: from_candid_Category_n17(_uploadFile, _downloadFile, value.category),
-        projectUrl: value.projectUrl
+        status: from_candid_BookingStatus_n13(_uploadFile, _downloadFile, value.status),
+        eventId: value.eventId,
+        name: value.name,
+        email: value.email,
+        timestamp: value.timestamp,
+        phone: value.phone
     };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -550,7 +550,16 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
         topped_up_amount: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.topped_up_amount))
     };
 }
-function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    cancelled: null;
+} | {
+    pending: null;
+} | {
+    confirmed: null;
+}): BookingStatus {
+    return "cancelled" in value ? BookingStatus.cancelled : "pending" in value ? BookingStatus.pending : "confirmed" in value ? BookingStatus.confirmed : value;
+}
+function from_candid_variant_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
@@ -559,22 +568,11 @@ function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    seo: null;
-} | {
-    web_design: null;
-} | {
-    web_development: null;
-} | {
-    ecommerce: null;
-}): Category {
-    return "seo" in value ? Category.seo : "web_design" in value ? Category.web_design : "web_development" in value ? Category.web_development : "ecommerce" in value ? Category.ecommerce : value;
+function from_candid_vec_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Booking>): Array<Booking> {
+    return value.map((x)=>from_candid_Booking_n11(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_PortfolioItem>): Array<PortfolioItem> {
-    return value.map((x)=>from_candid_PortfolioItem_n15(_uploadFile, _downloadFile, x));
-}
-function to_candid_Category_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Category): _Category {
-    return to_candid_variant_n11(_uploadFile, _downloadFile, value);
+function to_candid_BookingStatus_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: BookingStatus): _BookingStatus {
+    return to_candid_variant_n20(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n9(_uploadFile, _downloadFile, value);
@@ -594,23 +592,19 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
 }
-function to_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Category): {
-    seo: null;
+function to_candid_variant_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: BookingStatus): {
+    cancelled: null;
 } | {
-    web_design: null;
+    pending: null;
 } | {
-    web_development: null;
-} | {
-    ecommerce: null;
+    confirmed: null;
 } {
-    return value == Category.seo ? {
-        seo: null
-    } : value == Category.web_design ? {
-        web_design: null
-    } : value == Category.web_development ? {
-        web_development: null
-    } : value == Category.ecommerce ? {
-        ecommerce: null
+    return value == BookingStatus.cancelled ? {
+        cancelled: null
+    } : value == BookingStatus.pending ? {
+        pending: null
+    } : value == BookingStatus.confirmed ? {
+        confirmed: null
     } : value;
 }
 function to_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {

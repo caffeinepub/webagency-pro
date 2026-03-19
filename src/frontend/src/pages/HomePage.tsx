@@ -1,471 +1,396 @@
-import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
-  ChevronRight,
-  Code2,
-  Globe,
-  Search,
-  ShoppingCart,
+  Calendar,
+  CheckCircle2,
+  ClipboardList,
   Star,
 } from "lucide-react";
-import type React from "react";
-import { Category } from "../backend";
-import ScrollReveal from "../components/ScrollReveal";
-import { usePortfolioItems, useServices } from "../hooks/useQueries";
+import { motion } from "motion/react";
+import type { Event } from "../backend.d";
+import EventCard from "../components/EventCard";
+import { useGetAllEvents } from "../hooks/useQueries";
 
-const fallbackServices = [
+const SAMPLE_EVENTS: Event[] = [
   {
     id: 1n,
-    iconName: "Globe",
-    title: "Web Design",
+    title: "Corporate Gala 2026",
+    date: BigInt(new Date("2026-03-15").getTime()) * 1000000n,
     description:
-      "Stunning, conversion-focused designs that captivate your audience and reinforce your brand identity.",
-    features: [
-      "Custom UI/UX Design",
-      "Mobile-First Approach",
-      "Brand Identity",
-    ],
+      "An exclusive black-tie corporate gala featuring award ceremonies, live entertainment, and fine dining for business leaders.",
+    imageUrl: "https://picsum.photos/seed/event1/400/250",
+    category: "Corporate",
+    capacity: 300n,
+    price: 250n,
+    location: "Grand Ballroom, New York",
   },
   {
     id: 2n,
-    iconName: "Code2",
-    title: "Web Development",
+    title: "Tech Summit 2026",
+    date: BigInt(new Date("2026-04-22").getTime()) * 1000000n,
     description:
-      "Fast, secure, and scalable web applications built with cutting-edge technologies.",
-    features: ["React & Next.js", "Node.js Backend", "API Integration"],
+      "A premier technology conference bringing together innovators, entrepreneurs, and tech visionaries from around the globe.",
+    imageUrl: "https://picsum.photos/seed/event2/400/250",
+    category: "Conference",
+    capacity: 500n,
+    price: 150n,
+    location: "Silicon Valley Convention Center",
   },
   {
     id: 3n,
-    iconName: "ShoppingCart",
-    title: "E-Commerce",
+    title: "Wedding Expo & Showcase",
+    date: BigInt(new Date("2026-05-10").getTime()) * 1000000n,
     description:
-      "Powerful online stores that drive sales, with seamless checkout and inventory management.",
-    features: ["Shopify & WooCommerce", "Payment Gateway", "Inventory System"],
+      "Discover the finest wedding vendors, planners, and inspiration to make your dream wedding a perfect reality.",
+    imageUrl: "https://picsum.photos/seed/event3/400/250",
+    category: "Wedding",
+    capacity: 200n,
+    price: 75n,
+    location: "Rosewood Estate, Beverly Hills",
   },
   {
     id: 4n,
-    iconName: "Search",
-    title: "SEO Services",
+    title: "Summer Music Festival",
+    date: BigInt(new Date("2026-06-28").getTime()) * 1000000n,
     description:
-      "Dominate search rankings and drive organic traffic with our proven SEO strategies.",
-    features: ["On-Page SEO", "Technical SEO", "Content Strategy"],
-  },
-];
-
-const fallbackPortfolio = [
-  {
-    id: 1n,
-    title: "LuxeShop E-Commerce",
-    category: Category.ecommerce,
-    imageUrl: "/assets/generated/portfolio-ecommerce.dim_800x600.jpg",
-    clientName: "LuxeShop Inc.",
-    completionYear: 2024n,
-    description: "Premium e-commerce platform",
-    projectUrl: "#",
-  },
-  {
-    id: 2n,
-    title: "Nexus Corporate Site",
-    category: Category.web_design,
-    imageUrl: "/assets/generated/portfolio-corporate.dim_800x600.jpg",
-    clientName: "Nexus Corp",
-    completionYear: 2024n,
-    description: "Corporate web design",
-    projectUrl: "#",
-  },
-  {
-    id: 3n,
-    title: "Saveur Restaurant",
-    category: Category.web_design,
-    imageUrl: "/assets/generated/portfolio-restaurant.dim_800x600.jpg",
-    clientName: "Saveur Bistro",
-    completionYear: 2023n,
-    description: "Restaurant website",
-    projectUrl: "#",
-  },
-  {
-    id: 4n,
-    title: "Prime Properties",
-    category: Category.web_development,
-    imageUrl: "/assets/generated/portfolio-realestate.dim_800x600.jpg",
-    clientName: "Prime Realty",
-    completionYear: 2024n,
-    description: "Real estate platform",
-    projectUrl: "#",
+      "Three days of world-class music across multiple stages featuring top international artists and emerging local talent.",
+    imageUrl: "https://picsum.photos/seed/event4/400/250",
+    category: "Music",
+    capacity: 5000n,
+    price: 120n,
+    location: "Central Park, New York",
   },
   {
     id: 5n,
-    title: "SaaS Analytics Dashboard",
-    category: Category.web_development,
-    imageUrl: "/assets/generated/portfolio-saas.dim_800x600.jpg",
-    clientName: "DataStream",
-    completionYear: 2023n,
-    description: "Analytics platform",
-    projectUrl: "#",
+    title: "Food & Wine Festival",
+    date: BigInt(new Date("2026-07-19").getTime()) * 1000000n,
+    description:
+      "A culinary journey celebrating the finest cuisines and premium wines from Michelin-starred chefs and elite sommeliers.",
+    imageUrl: "https://picsum.photos/seed/event5/400/250",
+    category: "Food",
+    capacity: 400n,
+    price: 180n,
+    location: "Harbor View Pavilion, San Francisco",
   },
   {
     id: 6n,
-    title: "TechStore SEO Campaign",
-    category: Category.seo,
-    imageUrl: "/assets/generated/portfolio-ecommerce.dim_800x600.jpg",
-    clientName: "TechStore BD",
-    completionYear: 2024n,
-    description: "SEO optimization",
-    projectUrl: "#",
+    title: "Business Innovation Forum",
+    date: BigInt(new Date("2026-08-05").getTime()) * 1000000n,
+    description:
+      "Connect with industry leaders and explore the latest trends in business strategy, innovation, and entrepreneurship.",
+    imageUrl: "https://picsum.photos/seed/event6/400/250",
+    category: "Business",
+    capacity: 250n,
+    price: 200n,
+    location: "Downtown Conference Hub, Chicago",
   },
 ];
 
-const testimonials = [
+const STEPS = [
   {
-    name: "Sarah Johnson",
-    role: "CEO, TechVision",
-    text: "RH Freelancer made us the most elegant business cards. Truly professional quality at an unbeatable price!",
-    rating: 5,
+    icon: Calendar,
+    title: "Choose Your Event",
+    description:
+      "Browse our curated selection of premium events and find the perfect one for you.",
   },
   {
-    name: "Marcus Chen",
-    role: "Founder, EcoMart",
-    text: "Outstanding visiting cards! RH Freelancer delivered exactly what we needed. Our clients are always impressed.",
-    rating: 5,
+    icon: ClipboardList,
+    title: "Fill Your Details",
+    description:
+      "Complete the simple booking form with your name, email, and contact details.",
   },
   {
-    name: "Aisha Patel",
-    role: "Marketing Director, FinServe",
-    text: "Our SEO rankings skyrocketed to page 1 for 15 competitive keywords within 3 months. Outstanding results!",
-    rating: 5,
+    icon: CheckCircle2,
+    title: "Get Confirmed",
+    description:
+      "Receive instant booking confirmation and prepare for an extraordinary experience.",
   },
 ];
-
-function ServiceIcon({ name }: { name: string }) {
-  const icons: Record<string, React.ReactElement> = {
-    Globe: <Globe size={28} className="text-gold" />,
-    Code2: <Code2 size={28} className="text-gold" />,
-    ShoppingCart: <ShoppingCart size={28} className="text-gold" />,
-    Search: <Search size={28} className="text-gold" />,
-  };
-  return icons[name] || <Globe size={28} className="text-gold" />;
-}
-
-function categoryLabel(cat: Category): string {
-  const labels: Record<Category, string> = {
-    [Category.web_design]: "Web Design",
-    [Category.web_development]: "Web Development",
-    [Category.ecommerce]: "E-Commerce",
-    [Category.seo]: "SEO",
-  };
-  return labels[cat] || cat;
-}
 
 export default function HomePage() {
-  const { data: services } = useServices();
-  const { data: portfolio } = usePortfolioItems();
+  const navigate = useNavigate();
+  const { data: backendEvents } = useGetAllEvents();
+  const events = (
+    backendEvents && backendEvents.length > 0 ? backendEvents : SAMPLE_EVENTS
+  ).slice(0, 4);
 
-  const displayServices =
-    services && services.length > 0 ? services.slice(0, 4) : fallbackServices;
-  const displayPortfolio =
-    portfolio && portfolio.length > 0
-      ? portfolio.slice(0, 6)
-      : fallbackPortfolio;
+  const handleBook = (eventId: bigint) => {
+    navigate({ to: "/book/$eventId", params: { eventId: eventId.toString() } });
+  };
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20 bg-navy-900">
+      {/* Hero */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-15"
+          className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
-              "url('/assets/generated/hero-bg.dim_1920x1080.jpg')",
+              "url('https://picsum.photos/seed/hero-banquet/1920/1080')",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy-900 via-navy-900/90 to-transparent" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="max-w-2xl">
-            <ScrollReveal delay={100}>
-              <p className="section-label mb-4">
-                ✦ Premium Visiting Card Creator
-              </p>
-            </ScrollReveal>
-            <ScrollReveal delay={200}>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black uppercase leading-tight mb-6">
-                <span className="text-gold">PREMIUM</span>{" "}
-                <span className="text-white">BUSINESS</span>
-                <br />
-                <span className="text-white">CARDS</span>
-                <br />
-                <span className="text-gold">MADE</span>
-              </h1>
-            </ScrollReveal>
-            <ScrollReveal delay={300}>
-              <p className="text-muted-foreground text-lg leading-relaxed mb-10 max-w-lg">
-                Low cost business cards are made for your business. Premium
-                quality visiting cards crafted to make lasting impressions.
-              </p>
-            </ScrollReveal>
-            <ScrollReveal delay={400}>
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  to="/contact"
-                  data-ocid="hero.primary_button"
-                  className="btn-gold text-sm"
-                >
-                  GET A FREE CONSULTATION <ArrowRight size={16} />
-                </Link>
-                <Link
-                  to="/portfolio"
-                  data-ocid="hero.secondary_button"
-                  className="px-8 py-3 border border-white/30 text-white font-bold uppercase tracking-widest text-sm hover:border-gold hover:text-gold transition-all duration-300 inline-flex items-center gap-2"
-                >
-                  VIEW OUR WORK <ChevronRight size={16} />
-                </Link>
-              </div>
-            </ScrollReveal>
-
-            {/* Stats */}
-            <ScrollReveal delay={500}>
-              <div className="mt-14 flex flex-wrap gap-10">
-                {[
-                  { label: "Projects Completed", value: "150+" },
-                  { label: "Happy Clients", value: "80+" },
-                  { label: "Years Experience", value: "8+" },
-                ].map((stat) => (
-                  <div key={stat.label}>
-                    <div className="text-3xl font-black text-gold">
-                      {stat.value}
-                    </div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollReveal>
-          </div>
+        <div className="absolute inset-0 bg-black/65" />
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-4"
+          >
+            <span className="text-gold text-xs font-bold uppercase tracking-[0.4em] border border-gold/40 px-4 py-1.5 rounded-full">
+              Premium Event Experiences
+            </span>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-black uppercase tracking-tight text-gold leading-none mb-6"
+          >
+            Your Event
+            <br />
+            <span className="text-foreground">Deserves</span>
+            <br />
+            The Best
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+          >
+            From corporate galas to intimate celebrations — discover, book, and
+            experience world-class events with effortless elegance.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Button
+              onClick={() => navigate({ to: "/events" })}
+              className="bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm px-10 py-6 text-base hover:opacity-90"
+              data-ocid="hero.primary_button"
+            >
+              Explore Events <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <Button
+              onClick={() => navigate({ to: "/book" })}
+              variant="outline"
+              className="border-gold/60 text-gold hover:bg-gold/10 font-bold uppercase tracking-widest text-sm px-10 py-6 text-base"
+              data-ocid="hero.secondary_button"
+            >
+              Book Now
+            </Button>
+          </motion.div>
+        </div>
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}
+            className="w-6 h-9 border-2 border-gold/40 rounded-full flex items-start justify-center pt-1.5"
+          >
+            <div className="w-1 h-2 bg-gold rounded-full" />
+          </motion.div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-24 bg-navy-900">
+      {/* Stats */}
+      <section className="bg-navy-800 border-y border-border py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <p className="section-label">What We Do</p>
-              <h2 className="section-title text-4xl md:text-5xl">
-                OUR SERVICES
-              </h2>
-              <div className="w-16 h-0.5 bg-primary mx-auto mt-4" />
-            </div>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {displayServices.map((service, i) => (
-              <ScrollReveal key={String(service.id)} delay={i * 100}>
-                <div
-                  data-ocid={`services.item.${i + 1}`}
-                  className="bg-navy-700 border border-navy-600 p-8 group hover:border-gold transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="w-14 h-14 bg-navy-800 border border-navy-600 group-hover:border-gold flex items-center justify-center mb-6 transition-colors">
-                    <ServiceIcon name={service.iconName} />
-                  </div>
-                  <h3 className="text-white font-bold uppercase tracking-wide text-lg mb-3">
-                    {service.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {service.description}
-                  </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { value: "500+", label: "Events Hosted" },
+              { value: "50K+", label: "Happy Guests" },
+              { value: "200+", label: "Premium Venues" },
+              { value: "98%", label: "Satisfaction Rate" },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <div className="text-gold font-black text-3xl md:text-4xl">
+                  {stat.value}
                 </div>
-              </ScrollReveal>
+                <div className="text-muted-foreground text-xs uppercase tracking-widest mt-1">
+                  {stat.label}
+                </div>
+              </div>
             ))}
           </div>
-
-          <ScrollReveal>
-            <div className="text-center mt-12">
-              <Link
-                to="/services"
-                data-ocid="services.primary_button"
-                className="btn-gold"
-              >
-                Explore All Services <ArrowRight size={16} />
-              </Link>
-            </div>
-          </ScrollReveal>
         </div>
       </section>
 
-      {/* Portfolio Section */}
-      <section className="py-24 bg-navy-800">
+      {/* Featured Events */}
+      <section className="bg-background py-20" data-ocid="events.section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <p className="section-label">Our Work</p>
-              <h2 className="section-title text-4xl md:text-5xl">
-                RECENT WORKS
-              </h2>
-              <div className="w-16 h-0.5 bg-primary mx-auto mt-4" />
-            </div>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayPortfolio.map((item, i) => (
-              <ScrollReveal key={String(item.id)} delay={i * 80}>
-                <div
-                  data-ocid={`portfolio.item.${i + 1}`}
-                  className="group relative overflow-hidden aspect-video bg-navy-700"
-                >
-                  <img
-                    src={
-                      item.imageUrl ||
-                      "/assets/generated/portfolio-corporate.dim_800x600.jpg"
-                    }
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                    <span className="text-xs text-gold font-bold uppercase tracking-widest mb-1">
-                      {categoryLabel(item.category)}
-                    </span>
-                    <h3 className="text-white font-bold text-lg">
-                      {item.title}
-                    </h3>
-                    <p className="text-muted-foreground text-xs mt-1">
-                      {item.clientName} · {String(item.completionYear)}
-                    </p>
-                  </div>
-                </div>
-              </ScrollReveal>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-14"
+          >
+            <div className="section-label">Featured Events</div>
+            <h2 className="section-title text-3xl md:text-4xl">
+              Upcoming Experiences
+            </h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
+          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {events.map((event, i) => (
+              <EventCard
+                key={event.id.toString()}
+                event={event}
+                onBook={handleBook}
+                index={i}
+              />
             ))}
           </div>
-
-          <ScrollReveal>
-            <div className="text-center mt-12">
-              <Link
-                to="/portfolio"
-                data-ocid="portfolio.primary_button"
-                className="btn-gold"
-              >
-                VIEW ALL PORTFOLIO <ArrowRight size={16} />
-              </Link>
-            </div>
-          </ScrollReveal>
+          <div className="text-center mt-12">
+            <Button
+              onClick={() => navigate({ to: "/events" })}
+              variant="outline"
+              className="border-gold text-gold hover:bg-gold/10 font-bold uppercase tracking-widest text-xs px-10 py-5"
+              data-ocid="events.secondary_button"
+            >
+              View All Events <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* About Teaser */}
-      <section className="py-24 bg-navy-900">
+      {/* Booking Process */}
+      <section className="bg-navy-800 py-20 border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <ScrollReveal direction="left">
-              <div className="relative">
-                <img
-                  src="/assets/generated/about-team.dim_800x600.jpg"
-                  alt="Our team"
-                  className="w-full object-cover border-2 border-gold gold-glow"
-                  loading="lazy"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-navy-900/90 border-t border-gold p-4">
-                  <p className="text-gold font-bold text-sm uppercase tracking-widest">
-                    Expert Team of 12+
-                  </p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Designers, Developers & Digital Strategists
-                  </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-14"
+          >
+            <div className="section-label">How It Works</div>
+            <h2 className="section-title text-3xl md:text-4xl">
+              Easy Booking Process
+            </h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {STEPS.map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15, duration: 0.5 }}
+                className="text-center group"
+              >
+                <div className="w-16 h-16 rounded-full border-2 border-gold/40 bg-primary/10 flex items-center justify-center mx-auto mb-5 group-hover:border-gold transition-colors duration-300">
+                  <step.icon className="w-7 h-7 text-gold" />
                 </div>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal direction="right">
-              <div>
-                <p className="section-label">Who We Are</p>
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-1 h-16 bg-gold flex-shrink-0 mt-1" />
-                  <h2 className="section-title text-4xl md:text-5xl">
-                    OUR STORY
-                  </h2>
+                <div className="text-gold font-black text-4xl mb-2 opacity-20">
+                  0{i + 1}
                 </div>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  RH Freelancer is a premium visiting card creator based in
-                  Satkania, Chattogram. We specialize in designing and printing
-                  stunning business cards at the lowest cost without
-                  compromising quality.
+                <h3 className="text-foreground font-bold text-lg uppercase tracking-wider mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {step.description}
                 </p>
-                <p className="text-muted-foreground leading-relaxed mb-8">
-                  Every card we create is a masterpiece — crafted to help
-                  professionals and businesses make a lasting first impression.
-                </p>
-                <Link
-                  to="/about"
-                  data-ocid="about.primary_button"
-                  className="btn-gold"
-                >
-                  Learn More About Us <ArrowRight size={16} />
-                </Link>
-              </div>
-            </ScrollReveal>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 bg-navy-800">
+      <section className="bg-background py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <p className="section-label">Client Reviews</p>
-              <h2 className="section-title text-4xl md:text-5xl">
-                WHAT CLIENTS SAY
-              </h2>
-              <div className="w-16 h-0.5 bg-primary mx-auto mt-4" />
-            </div>
-          </ScrollReveal>
-
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="section-label">Testimonials</div>
+            <h2 className="section-title text-3xl md:text-4xl">
+              What Guests Say
+            </h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
+          </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <ScrollReveal key={t.name} delay={i * 100}>
-                <div
-                  data-ocid={`testimonials.item.${i + 1}`}
-                  className="bg-navy-700 border border-navy-600 p-8 hover:border-gold transition-colors"
-                >
-                  <div className="flex gap-1 mb-4">
-                    {[1, 2, 3, 4, 5].slice(0, t.rating).map((n) => (
-                      <Star key={n} size={14} className="text-gold fill-gold" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-6 italic">
-                    &ldquo;{t.text}&rdquo;
-                  </p>
-                  <div>
-                    <div className="font-bold text-white">{t.name}</div>
-                    <div className="text-gold text-xs uppercase tracking-wider mt-1">
-                      {t.role}
-                    </div>
-                  </div>
+            {[
+              {
+                quote:
+                  "The Corporate Gala was absolutely magnificent. Every detail was perfected to the highest standard.",
+                author: "Alexandra Chen",
+                role: "CEO, TechVentures Inc.",
+              },
+              {
+                quote:
+                  "Booking was seamlessly simple. The Tech Summit exceeded every expectation — a truly world-class event.",
+                author: "Marcus Williams",
+                role: "Product Director",
+              },
+              {
+                quote:
+                  "Our wedding expo experience was extraordinary. We found our dream vendors and made memories forever.",
+                author: "Priya Sharma",
+                role: "Event Guest",
+              },
+            ].map((t) => (
+              <motion.div
+                key={t.author}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="bg-card border border-border rounded-lg p-6 hover:border-gold/30 transition-colors"
+              >
+                <div className="flex gap-1 mb-4">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} className="w-4 h-4 text-gold fill-gold" />
+                  ))}
                 </div>
-              </ScrollReveal>
+                <p className="text-muted-foreground text-sm leading-relaxed italic mb-5">
+                  "{t.quote}"
+                </p>
+                <div>
+                  <div className="text-foreground font-bold text-sm">
+                    {t.author}
+                  </div>
+                  <div className="text-gold text-xs">{t.role}</div>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Banner */}
-      <section className="py-20 bg-navy-900 border-y border-gold/20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <ScrollReveal>
-            <h2 className="section-title text-4xl md:text-5xl mb-6">
-              LET&apos;S BUILD SOMETHING{" "}
-              <span className="text-gold">GREAT</span>
+      <section className="bg-primary/10 border-y border-gold/20 py-16">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl md:text-4xl font-black uppercase text-gold mb-4">
+              Ready to Book Your Event?
             </h2>
-            <p className="text-muted-foreground mb-10 text-lg">
-              Ready to get your premium business cards? Contact us today for the
-              best price.
+            <p className="text-muted-foreground mb-8">
+              Join thousands of satisfied guests who've experienced the Aura
+              Events difference.
             </p>
-            <Link
-              to="/contact"
+            <Button
+              onClick={() => navigate({ to: "/book" })}
+              className="bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm px-12 py-6 text-base hover:opacity-90"
               data-ocid="cta.primary_button"
-              className="btn-gold text-base px-12 py-4"
             >
-              GET STARTED TODAY <ArrowRight size={18} />
-            </Link>
-          </ScrollReveal>
+              Book Now <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+          </motion.div>
         </div>
       </section>
     </>

@@ -1,270 +1,267 @@
 import Array "mo:core/Array";
-import Nat "mo:core/Nat";
 import List "mo:core/List";
+import Map "mo:core/Map";
+import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
-import Map "mo:core/Map";
 import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 import Iter "mo:core/Iter";
+import Principal "mo:core/Principal";
 import MixinStorage "blob-storage/Mixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+
+// Data migration for state changes
+
 actor {
   include MixinStorage();
 
-  // Type Definitions
-  type Category = {
-    #web_design;
-    #web_development;
-    #ecommerce;
-    #seo;
-  };
-
-  type PortfolioItem = {
+  // Types
+  type Event = {
     id : Nat;
     title : Text;
+    date : Time.Time;
     description : Text;
-    category : Category;
+    location : Text;
+    capacity : Nat;
+    price : Nat;
     imageUrl : Text;
-    projectUrl : Text;
-    clientName : Text;
-    completionYear : Nat;
+    category : Text;
   };
 
-  type Service = {
-    id : Nat;
-    title : Text;
-    description : Text;
-    features : [Text];
-    iconName : Text;
-    displayOrder : Nat;
+  type BookingStatus = {
+    #pending;
+    #confirmed;
+    #cancelled;
   };
 
-  type ContactFormSubmission = {
+  type Booking = {
     id : Nat;
     name : Text;
     email : Text;
     phone : Text;
-    subject : Text;
-    message : Text;
+    eventId : Nat;
+    status : BookingStatus;
     timestamp : Time.Time;
   };
 
-  type SiteSettings = {
-    companyName : Text;
-    tagline : Text;
-    phone : Text;
+  public type UserProfile = {
+    name : Text;
     email : Text;
-    address : Text;
-    whatsappNumber : Text;
-    facebookUrl : Text;
-    instagramUrl : Text;
-    linkedinUrl : Text;
-    twitterUrl : Text;
+    phone : Text;
   };
 
-  module PortfolioItem {
-    public func compare(a : PortfolioItem, b : PortfolioItem) : Order.Order {
+  // State variables
+  var nextEventId = 1;
+  var nextBookingId = 1;
+
+  let events = Map.empty<Nat, Event>();
+  let bookings = Map.empty<Nat, Booking>();
+  let userProfiles = Map.empty<Principal, UserProfile>();
+
+  // Compare modules for sorting
+  module Event {
+    public func compare(a : Event, b : Event) : Order.Order {
       Nat.compare(a.id, b.id);
     };
   };
 
-  module Service {
-    public func compare(a : Service, b : Service) : Order.Order {
-      Nat.compare(a.id, b.id);
-    };
-
-    public func compareByDisplayOrder(a : Service, b : Service) : Order.Order {
-      Nat.compare(a.displayOrder, b.displayOrder);
-    };
-  };
-
-  module ContactFormSubmission {
-    public func compare(a : ContactFormSubmission, b : ContactFormSubmission) : Order.Order {
+  module Booking {
+    public func compare(a : Booking, b : Booking) : Order.Order {
       Nat.compare(a.id, b.id);
     };
   };
-
-  // State Variables
-  var nextPortfolioId = 1;
-  var nextServiceId = 1;
-  var nextContactFormId = 1;
-
-  let portfolioItems = Map.empty<Nat, PortfolioItem>();
-  let services = Map.empty<Nat, Service>();
-  let contactForms = List.empty<ContactFormSubmission>();
-  var siteSettings : ?SiteSettings = null;
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Public Methods
+  // User Profile Management
 
-  // Portfolio Management
-  public shared ({ caller }) func createPortfolioItem(title : Text, description : Text, category : Category, imageUrl : Text, projectUrl : Text, clientName : Text, completionYear : Nat) : async () {
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access profiles");
+    };
+    userProfiles.get(caller);
+  };
+
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
+    userProfiles.get(user);
+  };
+
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    userProfiles.add(caller, profile);
+  };
+
+  // Event Management (Admin only for create/update/delete, public for read)
+
+  public shared ({ caller }) func createEvent(
+    title : Text,
+    date : Time.Time,
+    description : Text,
+    location : Text,
+    capacity : Nat,
+    price : Nat,
+    imageUrl : Text,
+    category : Text,
+  ) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can create portfolio items");
+      Runtime.trap("Unauthorized: Only admins can create events");
     };
 
-    let item : PortfolioItem = {
-      id = nextPortfolioId;
+    let event : Event = {
+      id = nextEventId;
       title;
+      date;
       description;
-      category;
+      location;
+      capacity;
+      price;
       imageUrl;
-      projectUrl;
-      clientName;
-      completionYear;
-    };
-
-    portfolioItems.add(nextPortfolioId, item);
-    nextPortfolioId += 1;
-  };
-
-  public shared ({ caller }) func updatePortfolioItem(id : Nat, title : Text, description : Text, category : Category, imageUrl : Text, projectUrl : Text, clientName : Text, completionYear : Nat) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can update portfolio items");
-    };
-
-    if (not portfolioItems.containsKey(id)) {
-      Runtime.trap("Portfolio item not found");
-    };
-
-    let updatedItem : PortfolioItem = {
-      id;
-      title;
-      description;
       category;
-      imageUrl;
-      projectUrl;
-      clientName;
-      completionYear;
     };
 
-    portfolioItems.add(id, updatedItem);
+    events.add(nextEventId, event);
+    nextEventId += 1;
   };
 
-  public shared ({ caller }) func deletePortfolioItem(id : Nat) : async () {
+  public shared ({ caller }) func updateEvent(
+    id : Nat,
+    title : Text,
+    date : Time.Time,
+    description : Text,
+    location : Text,
+    capacity : Nat,
+    price : Nat,
+    imageUrl : Text,
+    category : Text,
+  ) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can delete portfolio items");
+      Runtime.trap("Unauthorized: Only admins can update events");
     };
 
-    if (not portfolioItems.containsKey(id)) {
-      Runtime.trap("Portfolio item not found");
+    switch (events.get(id)) {
+      case (null) { Runtime.trap("Event not found") };
+      case (_) {
+        let updatedEvent : Event = {
+          id;
+          title;
+          date;
+          description;
+          location;
+          capacity;
+          price;
+          imageUrl;
+          category;
+        };
+
+        events.add(id, updatedEvent);
+      };
     };
-
-    portfolioItems.remove(id);
   };
 
-  public query ({ caller }) func getPortfolioItems() : async [PortfolioItem] {
-    portfolioItems.values().toArray().sort();
-  };
-
-  // Service Management
-  public shared ({ caller }) func createService(title : Text, description : Text, features : [Text], iconName : Text, displayOrder : Nat) : async () {
+  public shared ({ caller }) func deleteEvent(id : Nat) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can create services");
+      Runtime.trap("Unauthorized: Only admins can delete events");
     };
 
-    let service : Service = {
-      id = nextServiceId;
-      title;
-      description;
-      features;
-      iconName;
-      displayOrder;
+    if (not events.containsKey(id)) {
+      Runtime.trap("Event not found");
     };
 
-    services.add(nextServiceId, service);
-    nextServiceId += 1;
+    events.remove(id);
   };
 
-  public shared ({ caller }) func updateService(id : Nat, title : Text, description : Text, features : [Text], iconName : Text, displayOrder : Nat) : async () {
+  // Public can view all events
+  public query func getAllEvents() : async [Event] {
+    events.values().toArray().sort();
+  };
+
+  // Public can view individual events
+  public query func getEvent(id : Nat) : async ?Event {
+    events.get(id);
+  };
+
+  // Booking Management
+
+  // Public can create bookings without login
+  public shared func createBooking(
+    name : Text,
+    email : Text,
+    phone : Text,
+    eventId : Nat,
+  ) : async Nat {
+    switch (events.get(eventId)) {
+      case (null) { Runtime.trap("Event not found") };
+      case (_) {
+        let booking : Booking = {
+          id = nextBookingId;
+          name;
+          email;
+          phone;
+          eventId;
+          status = #pending;
+          timestamp = Time.now();
+        };
+
+        bookings.add(nextBookingId, booking);
+        nextBookingId += 1;
+        booking.id;
+      };
+    };
+  };
+
+  // Admin only - bookings contain sensitive customer data
+  public query ({ caller }) func getBookingsByEvent(eventId : Nat) : async [Booking] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can update services");
+      Runtime.trap("Unauthorized: Only admins can view bookings");
     };
-
-    if (not services.containsKey(id)) {
-      Runtime.trap("Service not found");
-    };
-
-    let updatedService : Service = {
-      id;
-      title;
-      description;
-      features;
-      iconName;
-      displayOrder;
-    };
-
-    services.add(id, updatedService);
+    bookings.values().toArray().filter(func(b) { b.eventId == eventId });
   };
 
-  public shared ({ caller }) func deleteService(id : Nat) : async () {
+  // Admin only
+  public query ({ caller }) func getAllBookings() : async [Booking] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can delete services");
+      Runtime.trap("Unauthorized: Only admins can view all bookings");
     };
 
-    if (not services.containsKey(id)) {
-      Runtime.trap("Service not found");
-    };
-
-    services.remove(id);
+    bookings.values().toArray().sort();
   };
 
-  public query ({ caller }) func getServices() : async [Service] {
-    services.values().toArray().sort(Service.compareByDisplayOrder);
-  };
-
-  // Contact Form Management
-  public shared ({ caller }) func submitContactForm(name : Text, email : Text, phone : Text, subject : Text, message : Text) : async () {
-    let submission : ContactFormSubmission = {
-      id = nextContactFormId;
-      name;
-      email;
-      phone;
-      subject;
-      message;
-      timestamp = Time.now();
-    };
-
-    contactForms.add(submission);
-    nextContactFormId += 1;
-  };
-
-  public query ({ caller }) func getContactFormSubmissions() : async [ContactFormSubmission] {
+  // Admin only
+  public shared ({ caller }) func updateBookingStatus(bookingId : Nat, newStatus : BookingStatus) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view contact form submissions");
+      Runtime.trap("Unauthorized: Only admins can update booking status");
     };
 
-    contactForms.toArray().sort();
+    switch (bookings.get(bookingId)) {
+      case (null) { Runtime.trap("Booking not found") };
+      case (?booking) {
+        let updatedBooking = {
+          booking with status = newStatus;
+        };
+        bookings.add(bookingId, updatedBooking);
+      };
+    };
   };
 
-  // Site Settings Management
-  public shared ({ caller }) func updateSiteSettings(companyName : Text, tagline : Text, phone : Text, email : Text, address : Text, whatsappNumber : Text, facebookUrl : Text, instagramUrl : Text, linkedinUrl : Text, twitterUrl : Text) : async () {
+  // Admin only
+  public shared ({ caller }) func deleteBooking(bookingId : Nat) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can update site settings");
+      Runtime.trap("Unauthorized: Only admins can delete bookings");
     };
 
-    let settings : SiteSettings = {
-      companyName;
-      tagline;
-      phone;
-      email;
-      address;
-      whatsappNumber;
-      facebookUrl;
-      instagramUrl;
-      linkedinUrl;
-      twitterUrl;
+    if (not bookings.containsKey(bookingId)) {
+      Runtime.trap("Booking not found");
     };
 
-    siteSettings := ?settings;
-  };
-
-  public query ({ caller }) func getSiteSettings() : async ?SiteSettings {
-    siteSettings;
+    bookings.remove(bookingId);
   };
 };
