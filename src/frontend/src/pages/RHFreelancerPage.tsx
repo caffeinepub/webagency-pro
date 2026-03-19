@@ -16,7 +16,6 @@ import {
   Mail,
   MapPin,
   MessageCircle,
-  Phone,
   Send,
   Sparkles,
   Star,
@@ -450,17 +449,6 @@ function Header() {
               ),
             )}
           </nav>
-
-          {/* CTA */}
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => handleNavClick("#services")}
-              data-ocid="nav.primary_button"
-              className="bg-gold hover:bg-gold-light text-black-deep font-bold text-[11px] tracking-[0.18em] uppercase px-5 py-2 rounded-full shadow-gold transition-all hover:shadow-gold-lg hover:scale-105"
-            >
-              Order Now
-            </Button>
-          </div>
         </div>
       </div>
     </header>
@@ -485,29 +473,7 @@ function HeroSection() {
       <div className="absolute top-1/2 right-1/6 w-2 h-2 rounded-full bg-gold opacity-20" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
-        {/* Prominent logo at very top — visible on all screen sizes */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center mb-12"
-        >
-          <div className="relative">
-            <div className="absolute inset-[-12px] rounded-full bg-gold/8 blur-2xl" />
-            <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-gold/40 shadow-[0_0_40px_oklch(0.76_0.135_80/0.25)]">
-              <img
-                src="/assets/generated/rh-logo-transparent.dim_400x400.png"
-                alt="RH Freelancer Logo"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-          <p className="text-gold text-[11px] font-semibold tracking-[0.35em] uppercase mt-3">
-            RH Freelancer Design Studio
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="grid grid-cols-1 gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -546,42 +512,6 @@ function HeroSection() {
               Premium quality visiting cards, banners, posters, and websites at
               the most affordable prices. Your brand deserves the very best.
             </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-              className="flex flex-wrap gap-4"
-            >
-              <Button
-                onClick={() => scrollTo("#services")}
-                data-ocid="hero.primary_button"
-                className="bg-gold hover:bg-gold-light text-black-deep font-bold text-xs tracking-[0.18em] uppercase px-8 py-3 h-auto rounded-full shadow-gold-lg hover:shadow-gold transition-all hover:scale-105"
-              >
-                VIEW SERVICES
-              </Button>
-            </motion.div>
-          </motion.div>
-
-          {/* Right: Logo showcase (desktop only) */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="hidden lg:flex items-center justify-center"
-          >
-            <div className="relative">
-              {/* Outer glow ring */}
-              <div className="absolute inset-[-16px] rounded-full bg-gold/5 blur-2xl" />
-              <div className="absolute inset-[-8px] rounded-full border border-gold/10" />
-              <div className="w-64 h-64 rounded-full overflow-hidden border-2 border-gold/30 shadow-[0_0_60px_oklch(0.76_0.135_80/0.2)]">
-                <img
-                  src="/assets/generated/rh-logo-transparent.dim_400x400.png"
-                  alt="RH Freelancer"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
           </motion.div>
         </div>
       </div>
@@ -688,26 +618,7 @@ function AboutSection() {
   return (
     <section id="about" className="bg-black-deep py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Image / Logo showcase */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="relative"
-          >
-            <div className="relative rounded-2xl overflow-hidden shadow-card border border-gold/15">
-              <img
-                src="/assets/generated/rh-logo-transparent.dim_400x400.png"
-                alt="RH Freelancer - Premium Design Studio"
-                className="w-full object-cover"
-                style={{ maxHeight: 420, objectFit: "cover" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black-deep/60 via-transparent to-transparent" />
-            </div>
-          </motion.div>
-
+        <div className="grid grid-cols-1 gap-12 items-center">
           {/* Text */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
@@ -749,13 +660,6 @@ function AboutSection() {
                 </div>
               ))}
             </div>
-
-            <Button
-              onClick={() => scrollTo("#services")}
-              className="bg-gold hover:bg-gold-light text-black-deep font-bold text-xs tracking-[0.18em] uppercase px-8 py-3 h-auto rounded-full shadow-gold hover:shadow-gold-lg transition-all hover:scale-105"
-            >
-              View Our Services
-            </Button>
           </motion.div>
         </div>
       </div>
@@ -816,9 +720,7 @@ function WhyChooseSection() {
 /* ═══════════════════════════════════════════════
    CONTACT SECTION
 ═══════════════════════════════════════════════ */
-function ContactSection({
-  onOrderService,
-}: { onOrderService: (svc: ServiceItem) => void }) {
+function ContactSection() {
   return (
     <section
       id="contact"
@@ -843,22 +745,16 @@ function ContactSection({
           <div className="gold-divider mx-auto mt-5" />
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="flex justify-center">
           {/* Contact info */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="space-y-5"
+            className="space-y-5 w-full max-w-lg"
           >
             {[
-              {
-                icon: Phone,
-                label: "Phone / WhatsApp",
-                value: "01629066833",
-                href: "tel:+8801629066833",
-              },
               {
                 icon: Mail,
                 label: "Email",
@@ -870,12 +766,6 @@ function ContactSection({
                 label: "Location",
                 value: "Satkania, Chattogram",
                 href: "https://maps.google.com/?q=Satkania,Chattogram",
-              },
-              {
-                icon: MessageCircle,
-                label: "WhatsApp",
-                value: "Chat on WhatsApp",
-                href: "https://wa.me/8801857527455",
               },
             ].map((c) => (
               <a
@@ -904,20 +794,12 @@ function ContactSection({
             {/* Social links */}
             <div className="flex items-center gap-3 pt-2 pl-4">
               <a
-                href="https://www.facebook.com/profile.php?id=61587066254736"
+                href="https://www.facebook.com/profile.php?id=61576658279275"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-gold/8 border border-gold/20 flex items-center justify-center hover:bg-gold/20 hover:border-gold/40 transition-all"
               >
                 <Facebook className="w-4 h-4 text-gold" />
-              </a>
-              <a
-                href="https://wa.me/8801629066833"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-gold/8 border border-gold/20 flex items-center justify-center hover:bg-gold/20 hover:border-gold/40 transition-all"
-              >
-                <MessageCircle className="w-4 h-4 text-gold" />
               </a>
               <a
                 href="https://instagram.com"
@@ -927,44 +809,6 @@ function ContactSection({
               >
                 <Instagram className="w-4 h-4 text-gold" />
               </a>
-            </div>
-          </motion.div>
-
-          {/* Quick order CTA */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="bg-black-card rounded-2xl p-8 border border-gold/15 shadow-card relative overflow-hidden"
-          >
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-            <h3 className="font-serif text-2xl font-bold text-off-white mb-3">
-              Ready to Order?
-            </h3>
-            <p className="text-silver text-sm leading-relaxed mb-6">
-              Click on any service below to place your order. Fill in your
-              details and we'll contact you on WhatsApp right away!
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {SERVICES.map((svc) => (
-                <button
-                  key={svc.title}
-                  type="button"
-                  onClick={() => onOrderService(svc)}
-                  className="flex flex-col items-start gap-1 p-4 rounded-xl bg-black-surface border border-border hover:border-gold/40 hover:bg-black-surface transition-all group"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <svc.icon className="w-5 h-5 text-gold" />
-                    <span className="font-serif font-bold text-gold text-lg">
-                      {svc.price}
-                    </span>
-                  </div>
-                  <span className="text-off-white text-xs font-semibold group-hover:text-gold transition-colors">
-                    {svc.title}
-                  </span>
-                </button>
-              ))}
             </div>
           </motion.div>
         </div>
@@ -977,11 +821,10 @@ function ContactSection({
    FOOTER
 ═══════════════════════════════════════════════ */
 function Footer() {
-  const year = new Date().getFullYear();
   return (
     <footer className="bg-black-deep border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-10">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -1026,27 +869,6 @@ function Footer() {
             </ul>
           </div>
 
-          {/* Services */}
-          <div>
-            <h4 className="font-serif text-off-white font-bold tracking-[0.2em] uppercase text-xs mb-5">
-              Services
-            </h4>
-            <ul className="space-y-2.5">
-              {SERVICES.map((svc) => (
-                <li key={svc.title}>
-                  <button
-                    type="button"
-                    onClick={() => scrollTo("#services")}
-                    className="text-silver hover:text-gold text-sm transition-colors flex items-center gap-2 group"
-                  >
-                    <span className="w-1 h-1 rounded-full bg-gold/50 group-hover:bg-gold transition-colors" />
-                    {svc.title} — <span className="text-gold">{svc.price}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Contact */}
           <div>
             <h4 className="font-serif text-off-white font-bold tracking-[0.2em] uppercase text-xs mb-5">
@@ -1063,15 +885,6 @@ function Footer() {
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
-                <Phone className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-                <a
-                  href="tel:+8801629066833"
-                  className="text-silver text-sm hover:text-gold transition-colors"
-                >
-                  01629066833
-                </a>
-              </li>
-              <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
                 <span className="text-silver text-sm">
                   Satkania, Chattogram
@@ -1079,23 +892,6 @@ function Footer() {
               </li>
             </ul>
           </div>
-        </div>
-
-        <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-silver text-sm">
-            © {year} RH Freelancer. All rights reserved.
-          </p>
-          <p className="text-muted-foreground text-xs">
-            Built with ❤️ using{" "}
-            <a
-              href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(typeof window !== "undefined" ? window.location.hostname : "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gold hover:text-gold-light transition-colors"
-            >
-              caffeine.ai
-            </a>
-          </p>
         </div>
       </div>
     </footer>
@@ -1135,7 +931,7 @@ export default function RHFreelancerPage() {
         <ServicesSection onOrderService={setSelectedService} />
         <AboutSection />
         <WhyChooseSection />
-        <ContactSection onOrderService={setSelectedService} />
+        <ContactSection />
       </main>
       <Footer />
       <WhatsAppButton />
