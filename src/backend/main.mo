@@ -11,10 +11,9 @@ import Principal "mo:core/Principal";
 import MixinStorage "blob-storage/Mixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import Migration "migration";
 
-
-// Data migration for state changes
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 

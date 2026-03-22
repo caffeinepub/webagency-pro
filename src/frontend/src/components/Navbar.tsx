@@ -1,144 +1,167 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
-import { Calendar, Menu, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Bell, Menu, Moon, Search, Sun, Video, X } from "lucide-react";
+import { useState } from "react";
 
-const navLinks = [
-  { label: "Home", to: "/" },
-  { label: "Events", to: "/events" },
-  { label: "Book Now", to: "/book" },
-];
+type NavbarProps = {
+  isDark: boolean;
+  onToggleTheme: () => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+};
 
-export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+export default function Navbar({
+  isDark,
+  onToggleTheme,
+  searchQuery,
+  onSearchChange,
+}: NavbarProps) {
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate({ to: "/", search: { q: searchQuery } });
+  };
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-navy-900 shadow-lg border-b border-border"
-          : "bg-navy-900/90 backdrop-blur-sm"
-      }`}
+      data-ocid="nav.section"
+      className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-background px-4 gap-2"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 group"
-            data-ocid="nav.link"
+      {/* Left: Logo + hamburger */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          aria-label="Menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        <Link
+          to="/"
+          search={{ q: "" }}
+          data-ocid="nav.link"
+          className="flex items-center gap-1.5"
+        >
+          <svg
+            width="28"
+            height="20"
+            viewBox="0 0 28 20"
+            fill="none"
+            role="img"
+            aria-label="VideoShareIt logo"
+            className="flex-shrink-0"
           >
-            <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center border border-primary/40">
-              <Calendar className="w-4 h-4 text-gold" />
-            </div>
-            <div className="leading-none">
-              <span className="text-gold font-black text-lg uppercase tracking-widest">
-                AURA
-              </span>
-              <span className="text-foreground/70 text-xs uppercase tracking-[0.2em] font-medium block">
-                EVENTS
-              </span>
-            </div>
-          </Link>
-
-          {/* Desktop Nav */}
-          <nav
-            className="hidden md:flex items-center gap-8"
-            data-ocid="nav.section"
-          >
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="text-sm font-semibold uppercase tracking-widest text-muted-foreground hover:text-gold transition-colors duration-200 relative group"
-                data-ocid="nav.link"
-              >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gold group-hover:w-full transition-all duration-300" />
-              </Link>
-            ))}
-          </nav>
-
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link to="/book">
-              <Button
-                className="bg-primary text-primary-foreground font-bold uppercase tracking-widest text-xs px-6 hover:opacity-90"
-                data-ocid="nav.primary_button"
-              >
-                Book Now
-              </Button>
-            </Link>
-            <Link to="/admin">
-              <Button
-                variant="outline"
-                className="border-border text-muted-foreground hover:text-gold hover:border-gold font-semibold uppercase tracking-wider text-xs px-4"
-                data-ocid="nav.secondary_button"
-              >
-                Admin
-              </Button>
-            </Link>
-          </div>
-
-          {/* Mobile toggle */}
-          <button
-            type="button"
-            className="md:hidden text-foreground p-2"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-            data-ocid="nav.toggle"
-          >
-            {menuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
+            <rect width="28" height="20" rx="4" fill="#ff0000" />
+            <polygon points="11,5 22,10 11,15" fill="white" />
+          </svg>
+          <span className="hidden sm:block text-base font-bold text-foreground tracking-tight">
+            VideoShare<span className="text-vsi-red">It</span>
+          </span>
+        </Link>
       </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-navy-900 border-t border-border overflow-hidden"
+      {/* Center: Search bar (desktop) */}
+      <form
+        onSubmit={handleSearchSubmit}
+        className={`${showMobileSearch ? "hidden" : "hidden md:flex"} flex-1 max-w-xl items-center gap-2`}
+      >
+        <div className="flex flex-1 overflow-hidden rounded-full border border-border bg-vsi-surface focus-within:border-ring">
+          <Input
+            data-ocid="search.input"
+            type="text"
+            placeholder="Search videos..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="flex-1 rounded-none rounded-l-full border-0 bg-transparent px-4 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-vsi-muted"
+          />
+          <Button
+            type="submit"
+            variant="ghost"
+            size="icon"
+            data-ocid="search.button"
+            className="rounded-none rounded-r-full border-l border-border bg-vsi-card px-4 hover:bg-vsi-hover"
           >
-            <div className="px-4 py-4 flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className="text-sm font-semibold uppercase tracking-widest text-muted-foreground hover:text-gold py-2"
-                  onClick={() => setMenuOpen(false)}
-                  data-ocid="nav.link"
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <Link to="/admin" onClick={() => setMenuOpen(false)}>
-                <Button
-                  variant="outline"
-                  className="w-full border-border text-muted-foreground hover:text-gold hover:border-gold text-xs uppercase tracking-widest"
-                  data-ocid="nav.secondary_button"
-                >
-                  Admin Panel
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
+      </form>
+
+      {/* Mobile search overlay */}
+      {showMobileSearch && (
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex flex-1 items-center gap-2 md:hidden"
+        >
+          <Input
+            data-ocid="search.input"
+            autoFocus
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="flex-1 rounded-full border-border bg-vsi-surface px-4 text-sm focus-visible:ring-1 placeholder:text-vsi-muted"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowMobileSearch(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </form>
+      )}
+
+      {/* Right: Actions */}
+      {!showMobileSearch && (
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setShowMobileSearch(true)}
+            aria-label="Search"
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden sm:flex"
+            aria-label="Upload"
+          >
+            <Video className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden sm:flex"
+            aria-label="Notifications"
+          >
+            <Bell className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleTheme}
+            data-ocid="nav.toggle"
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDark ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
+          <div className="h-8 w-8 flex-shrink-0 rounded-full bg-vsi-red flex items-center justify-center cursor-pointer">
+            <span className="text-xs font-bold text-white">U</span>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
